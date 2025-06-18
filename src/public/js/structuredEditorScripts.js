@@ -264,12 +264,12 @@ function updateFields(select) {
     else if (type === "hideField") {
         paramsDiv.innerHTML = HIDE_FIELD_SELECTOR;
     }
-     else if (type === "icon") {
+    else if (type === "icon") {
         paramsDiv.innerHTML = ICON_SELECTOR;
     } else if (type === "color") {
         paramsDiv.innerHTML = COLOR_SELECTOR;
-    } 
-    else if (type === "size") { 
+    }
+    else if (type === "size") {
         paramsDiv.innerHTML = SIZE_SELECTOR;
     }
     else if (type === "projection") {
@@ -356,7 +356,7 @@ function writeToYAMLEditor() {
                 } else if (input.type === "number") {
                     // Convert to number if the input type is number
                     params[key] = parseFloat(value);
-                }  
+                }
                 else if (input.type === "checkbox") {
                     // Handle checkbox inputs
                     params[key] = input.checked; // Add true or false based on the checkbox state
@@ -534,3 +534,66 @@ function populateStructuredEditor() {
 
 
 
+
+function isStructuredEditorVisible() {
+    const structuredEditorControls = document.getElementById('structuredEditorControls');
+    return structuredEditorControls && structuredEditorControls.style.display === 'block';
+}
+
+function isYamlEditorVisible() {
+    const yamlEditorControls = document.getElementById('yamlEditorControls');
+    return yamlEditorControls && yamlEditorControls.style.display === 'block';
+}
+
+
+function addOrientationConstraint(selector, directions) {
+
+
+    // If the structured editor is visible, add to the structured editor
+    if (isStructuredEditorVisible()) {
+
+        let constraintContainer = document.getElementById("constraintContainer");
+        let div = document.createElement("div");
+        div.classList.add("constraint");
+        div.innerHTML = CONSTRAINT_SELECT;
+        let sel = div.querySelector("select");
+        sel.value = "orientation";
+        constraintContainer.prepend(div); // Add the new element to the top
+        // Now set the field selector to the selector
+        let paramsDiv = div.querySelector(".params");
+        paramsDiv.innerHTML = ORIENTATION_SELECTOR;
+        let selectorInput = paramsDiv.querySelector("input[name='selector']");
+        selectorInput.value = selector;
+        let directionsInput = paramsDiv.querySelector("select[name='directions']");
+        // Set the selected directions
+        if (Array.isArray(directions)) {
+            directionsInput.value = directions; // Set the selected directions
+        } else {
+            directionsInput.value = [directions]; // Set the selected direction
+        }
+    }
+    else if (isYamlEditorVisible()) {
+        // If the YAML editor is visible, add to the YAML editor
+        let yamlContent = window.editor.getValue();
+        let parsedYaml = jsyaml.load(yamlContent) || {};
+        parsedYaml.constraints = parsedYaml.constraints || [];
+
+        // Create the orientation constraint object
+        let orientationConstraint = {
+            orientation: {
+                selector: selector,
+                directions: Array.isArray(directions) ? directions : [directions]
+            }
+        };
+
+        // Add the constraint to the constraints array
+        parsedYaml.constraints.push(orientationConstraint);
+
+        // Convert back to YAML and set it in the editor
+        let yamlStr = jsyaml.dump(parsedYaml);
+        window.editor.setValue(yamlStr);
+    }
+    else {
+        alert("Please open the structured editor or YAML editor to add an orientation constraint.");
+    }
+}
