@@ -479,8 +479,13 @@ function populateStructuredEditor() {
                             // Handle single-value fields
                             input.value = params[key];
                         }
-                    }
 
+                        // If the input is the value 'suggested', set the class 
+                        // of the DIV to 'suggestedConstraint'
+                        if (key === "suggested" && params[key] === true || params[key] === "true") {
+                            div.classList.add("suggestedConstraint");
+                        }
+                    }
                 });
             });
         }
