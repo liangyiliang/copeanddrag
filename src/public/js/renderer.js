@@ -228,7 +228,7 @@ function setupLayout(d3, nodes, edges, constraints, groups, width, height) {
 
             console.log("Link length", linkLength);
 
-            colaLayout.symmetricDiffLinkLengths(linkLength);
+            colaLayout.linkDistance(linkLength);
 
             colaLayout.constraints(scaledConstraints)
                 .start(
@@ -252,7 +252,7 @@ function setupLayout(d3, nodes, edges, constraints, groups, width, height) {
         .constraints(scaledConstraints)
         .groups(groups)
         .groupCompactness(1e-3)
-        .symmetricDiffLinkLengths(linkLength);
+        .linkDistance(linkLength);
 
 
     var lineFunction = d3.line()
