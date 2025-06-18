@@ -563,6 +563,11 @@ function isYamlEditorVisible() {
 function addOrientationConstraint(selector, directions) {
 
 
+    if(!selector || !directions || (Array.isArray(directions) && directions.length === 0)) {
+        console.error("Selector and directions not applied: ", selector, directions);
+    }
+
+
     // If the structured editor is visible, add to the structured editor
     if (isStructuredEditorVisible()) {
 
@@ -581,6 +586,9 @@ function addOrientationConstraint(selector, directions) {
         let directionsInput = paramsDiv.querySelector("select[name='directions']");
         // Set the selected directions
         if (Array.isArray(directions)) {
+
+            console.log("Setting multiple directions: ", directions);
+
             directionsInput.value = directions; // Set the selected directions
         } else {
             directionsInput.value = [directions]; // Set the selected direction
