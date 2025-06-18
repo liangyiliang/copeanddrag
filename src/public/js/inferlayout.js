@@ -1,51 +1,20 @@
 const inferLayout = () => {
-  const edges = window.getEdges();
-  const nodes = window.getNodes();
+  const relationConstraintTable = createRelationConcreteConstraintsTable();
+  const abstractConstraintsFromRelations =
+    generateAbstractConstraintsFromRelations(relationConstraintTable);
 
-  const table = [];
-  for (const edge of edges) {
-    const { source, target, relName, id: edgeId } = edge;
-    const sourceName = source.id;
-    const sourceType = source.mostSpecificType;
-    const targetName = target.id;
-    const targetType = target.mostSpecificType;
-    const pos1 = {
-      x: source.x,
-      y: source.y,
-      w: source.width,
-      h: source.height,
-    };
-    const pos0 = {
-      x: target.x,
-      y: target.y,
-      w: target.width,
-      h: target.height,
-    };
-
-    const shapeConstraintEnergyValues = {};
-    for (const [constrName, energyFn] of Object.entries(
-      shapeConstraintEnergyFn
-    )) {
-      const energy = energyFn(pos0, pos1);
-      shapeConstraintEnergyValues[constrName] = energy;
-    }
-
-    const record = {
-      relName,
-      sourceName,
-      targetName,
-      edgeId,
-      shapeConstraintEnergyValues,
-    };
-    table.push(record);
+  // Group constraints by relName
+  for (const { relName, constraints } of abstractConstraintsFromRelations) {
+    addOrientationConstraint(relName, constraints);
   }
 
-  // console.log(table);
-  const abstractConstraints = generateAbstractConstraints(table);
-  abstractConstraints.map(({ relName, constraint }) => {
-    addOrientationConstraint(relName, [constraint]);
+  const sigConstraintTable = createSigConcreteConstraintsTable();
+  const abstractConstraintsFromSigs =
+    generateAbstractConstraintsFromRelations(sigConstraintTable);
+  abstractConstraintsFromSigs.map(({ relName, constraints }) => {
+    const [t0, t1] = relName.split("-");
+    addOrientationConstraint(`${t0} -> ${t1}`, constraints);
   });
-  console.log(abstractConstraints);
 };
 
 const shapeConstraintEnergyFn = {
@@ -114,41 +83,122 @@ const alignmentEnergyFn = {
   },
 };
 
-const generateAbstractConstraints = (table) => {
-  const relationEdgeMap = new Map();
-  for (const record of table) {
-    const {
+const createRelationConcreteConstraintsTable = () => {
+  const edges = window.getEdges();
+  const nodes = window.getNodes();
+
+  const relationConstraintTable = [];
+  for (const edge of edges) {
+    const { source, target, relName, id: edgeId } = edge;
+    const sourceName = source.id;
+    const targetName = target.id;
+    const pos1 = {
+      x: source.x,
+      y: source.y,
+      w: source.width,
+      h: source.height,
+    };
+    const pos0 = {
+      x: target.x,
+      y: target.y,
+      w: target.width,
+      h: target.height,
+    };
+
+    const shapeConstraintEnergyValues = {};
+    for (const [constrName, energyFn] of Object.entries(
+      shapeConstraintEnergyFn
+    )) {
+      const energy = energyFn(pos0, pos1);
+      shapeConstraintEnergyValues[constrName] = energy;
+    }
+
+    const record = {
       relName,
       sourceName,
       targetName,
       edgeId,
       shapeConstraintEnergyValues,
-    } = record;
+    };
+    relationConstraintTable.push(record);
+  }
+  return relationConstraintTable;
+};
+
+const generateAbstractConstraintsFromRelations = (table) => {
+  const relationEdgeMap = new Map();
+  for (const record of table) {
+    const { relName, sourceName, targetName, shapeConstraintEnergyValues } =
+      record;
     if (!relationEdgeMap.has(relName)) {
       relationEdgeMap.set(relName, []);
     }
     relationEdgeMap.get(relName).push({
       sourceName: sourceName,
       targetName: targetName,
-      edgeId,
       shapeConstraintEnergyValues,
     });
   }
 
   const abstractConstraints = [];
   for (const [relName, edges] of relationEdgeMap.entries()) {
-    for (const constraint of Object.keys(shapeConstraintEnergyFn)) {
-      const energyValues = edges.map(
-        (edge) => edge.shapeConstraintEnergyValues[constraint]
-      );
-      if (energyValues.every((v) => v < 0.5)) {
-        abstractConstraints.push({
-          relName,
-          constraint,
-        });
-      }
+    const appropriateConstraints = Object.keys(shapeConstraintEnergyFn).filter(
+      (c) =>
+        edges
+          .map((edge) => edge.shapeConstraintEnergyValues[c])
+          .every((v) => v < 0.5)
+    );
+    if (appropriateConstraints.length !== 0) {
+      abstractConstraints.push({
+        relName,
+        constraints: appropriateConstraints,
+      });
     }
   }
 
   return abstractConstraints;
+};
+
+const createSigConcreteConstraintsTable = () => {
+  const nodes = window.getNodes();
+
+  const sigConstraintTable = [];
+  for (const n0 of nodes) {
+    for (const n1 of nodes) {
+      const t0 = n0.mostSpecificType,
+        t1 = n1.mostSpecificType;
+      if (t0 !== t1) {
+        const pos0 = {
+          x: n1.x,
+          y: n1.y,
+          w: n1.width,
+          h: n1.height,
+        };
+        const pos1 = {
+          x: n0.x,
+          y: n0.y,
+          w: n0.width,
+          h: n0.height,
+        };
+
+        const shapeConstraintEnergyValues = {};
+        for (const [constrName, energyFn] of Object.entries(
+          shapeConstraintEnergyFn
+        )) {
+          const energy = energyFn(pos0, pos1);
+          shapeConstraintEnergyValues[constrName] = energy;
+        }
+
+        sigConstraintTable.push({
+          relName: `${t0}-${t1}`,
+          typeSource: t0,
+          typeTarget: t1,
+          sourceName: n0.id,
+          targetName: n1.id,
+          shapeConstraintEnergyValues,
+        });
+      }
+    }
+  }
+  return sigConstraintTable;
 };
