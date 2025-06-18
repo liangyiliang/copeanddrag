@@ -6,14 +6,16 @@ const inferLayout = () => {
   for (const edge of edges) {
     const { source, target, relName, id: edgeId } = edge;
     const sourceName = source.id;
+    const sourceType = source.mostSpecificType;
     const targetName = target.id;
-    const pos0 = {
+    const targetType = target.mostSpecificType;
+    const pos1 = {
       x: source.x,
       y: source.y,
       w: source.width,
       h: source.height,
     };
-    const pos1 = {
+    const pos0 = {
       x: target.x,
       y: target.y,
       w: target.width,
@@ -37,7 +39,13 @@ const inferLayout = () => {
     };
     table.push(record);
   }
-  console.log(table);
+
+  // console.log(table);
+  const abstractConstraints = generateAbstractConstraints(table);
+  abstractConstraints.map(({ relName, constraint }) => {
+    addOrientationConstraint(relName, [constraint]);
+  });
+  console.log(abstractConstraints);
 };
 
 const shapeConstraintEnergyFn = {
@@ -104,4 +112,43 @@ const alignmentEnergyFn = {
     const diff = Math.abs(x0 - x1) - (w0 + w1) / 2 / 4;
     return diff < 0 ? 0 : diff;
   },
+};
+
+const generateAbstractConstraints = (table) => {
+  const relationEdgeMap = new Map();
+  for (const record of table) {
+    const {
+      relName,
+      sourceName,
+      targetName,
+      edgeId,
+      shapeConstraintEnergyValues,
+    } = record;
+    if (!relationEdgeMap.has(relName)) {
+      relationEdgeMap.set(relName, []);
+    }
+    relationEdgeMap.get(relName).push({
+      sourceName: sourceName,
+      targetName: targetName,
+      edgeId,
+      shapeConstraintEnergyValues,
+    });
+  }
+
+  const abstractConstraints = [];
+  for (const [relName, edges] of relationEdgeMap.entries()) {
+    for (const constraint of Object.keys(shapeConstraintEnergyFn)) {
+      const energyValues = edges.map(
+        (edge) => edge.shapeConstraintEnergyValues[constraint]
+      );
+      if (energyValues.every((v) => v < 0.5)) {
+        abstractConstraints.push({
+          relName,
+          constraint,
+        });
+      }
+    }
+  }
+
+  return abstractConstraints;
 };
