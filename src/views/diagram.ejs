@@ -62,6 +62,18 @@
             var constraints = <%- JSON.stringify(colaConstraints) %>;
             var groups = <%- JSON.stringify(colaGroups) %>;
 
+
+            ////// Let Scale Factor ////
+
+
+            window.getNodes = function () {
+                return nodes;
+            };
+
+            window.getEdges = function () {
+                return edges;
+            };
+
             if (width && height && nodes && edges && constraints && groups) {
                 setupLayout(d3, nodes, edges, constraints, groups, width, height);
             } else {
