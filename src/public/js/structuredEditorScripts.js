@@ -597,3 +597,54 @@ function addOrientationConstraint(selector, directions) {
         alert("Please open the structured editor or YAML editor to add an orientation constraint.");
     }
 }
+
+
+function addGroupByFieldConstraint(field, groupOn, addToGroup) {
+
+    // If the structured editor is visible, add to the structured editor
+    if (isStructuredEditorVisible()) {
+
+        let constraintContainer = document.getElementById("constraintContainer");
+        let div = document.createElement("div");
+        div.classList.add("constraint");
+        div.innerHTML = CONSTRAINT_SELECT;
+        let sel = div.querySelector("select");
+        sel.value = "groupfield";
+        constraintContainer.prepend(div); // Add the new element to the top
+        // Now set the field selector to the selector
+        let paramsDiv = div.querySelector(".params");
+        paramsDiv.innerHTML = GROUP_BY_FIELD_SELECTOR;
+        let fieldInput = paramsDiv.querySelector("input[name='field']");
+        fieldInput.value = field;
+        let groupOnInput = paramsDiv.querySelector("input[name='groupOn']");
+        groupOnInput.value = groupOn;
+        let addToGroupInput = paramsDiv.querySelector("input[name='addToGroup']");
+        addToGroupInput.value = addToGroup;
+    }
+    
+    if(isYamlEditorVisible()) {
+        // If the YAML editor is visible, add to the YAML editor
+        let yamlContent = window.editor.getValue();
+        let parsedYaml = jsyaml.load(yamlContent) || {};
+        parsedYaml.constraints = parsedYaml.constraints || [];
+
+        // Create the group by field constraint object
+        let groupFieldConstraint = {
+            group: {
+                field: field,
+                groupOn: parseInt(groupOn, 10),
+                addToGroup: parseInt(addToGroup, 10)
+            }
+        };
+
+        // Add the constraint to the constraints array
+        parsedYaml.constraints.push(groupFieldConstraint);
+
+        // Convert back to YAML and set it in the editor
+        let yamlStr = jsyaml.dump(parsedYaml);
+        window.editor.setValue(yamlStr);
+    }
+    else {
+        alert("Please open the structured editor or YAML editor to add a group by field constraint.");
+    }
+}
