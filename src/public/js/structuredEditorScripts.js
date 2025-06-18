@@ -41,6 +41,8 @@ const CYCLIC_SELECTOR = `
         <option value="counterclockwise">Counterclockwise</option>
     </select>
 </div>
+    <input type="hidden" name="suggested" value="false">
+
     `;
 
 
@@ -66,7 +68,10 @@ const ORIENTATION_SELECTOR = `
             <option value="directlyAbove">Directly Above</option>
             <option value="directlyBelow">Directly Below</option>
     </select>
-</div>       
+    
+</div>   
+    <input type="hidden" name="suggested" value="false">
+
 `;
 
 const GROUP_BY_FIELD_SELECTOR = `
@@ -82,6 +87,8 @@ const GROUP_BY_FIELD_SELECTOR = `
     <div class="input-group-prepend"> <span class="input-group-text infolabel" title="Which 0-indexed element of the field are group members."> Add to Group </span> </div>
     <input type="number" name="addToGroup" required>
 </div>
+    <input type="hidden" name="suggested" value="false">
+
 `;
 
 
@@ -98,6 +105,8 @@ const GROUP_BY_SELECTOR_SELECTOR = `
     <div class="input-group-prepend">  <span class="input-group-text">Group Name</span> </div>
     <input type="text" name="name" required>
 </div>
+    <input type="hidden" name="suggested" value="false">
+
 `;
 
 
@@ -571,6 +580,15 @@ function addOrientationConstraint(selector, directions) {
         } else {
             directionsInput.value = [directions]; // Set the selected direction
         }
+
+
+        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+        // Set the suggested input to true
+        suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
+
+        // And set the class of the DIV to 'suggestedConstraint'
+        div.classList.add("suggestedConstraint");
+
     }
     else if (isYamlEditorVisible()) {
         // If the YAML editor is visible, add to the YAML editor
@@ -582,12 +600,17 @@ function addOrientationConstraint(selector, directions) {
         let orientationConstraint = {
             orientation: {
                 selector: selector,
-                directions: Array.isArray(directions) ? directions : [directions]
+                directions: Array.isArray(directions) ? directions : [directions],
+                suggested: true // Indicate this constraint was added programmatically
             }
         };
 
         // Add the constraint to the constraints array
         parsedYaml.constraints.push(orientationConstraint);
+
+
+        // I want seggested field to ideally have a comment above it saying
+        // "This constraint was added programmatically. You can edit it in the structured editor."
 
         // Convert back to YAML and set it in the editor
         let yamlStr = jsyaml.dump(parsedYaml);
@@ -620,6 +643,14 @@ function addGroupByFieldConstraint(field, groupOn, addToGroup) {
         groupOnInput.value = groupOn;
         let addToGroupInput = paramsDiv.querySelector("input[name='addToGroup']");
         addToGroupInput.value = addToGroup;
+
+        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+        // Set the suggested input to true
+        suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
+
+        // And set the class of the DIV to 'suggestedConstraint'
+        div.classList.add("suggestedConstraint");
+
     }
     
     if(isYamlEditorVisible()) {
@@ -633,7 +664,8 @@ function addGroupByFieldConstraint(field, groupOn, addToGroup) {
             group: {
                 field: field,
                 groupOn: parseInt(groupOn, 10),
-                addToGroup: parseInt(addToGroup, 10)
+                addToGroup: parseInt(addToGroup, 10),
+                suggestedInput: true // Indicate this constraint was added programmatically
             }
         };
 
