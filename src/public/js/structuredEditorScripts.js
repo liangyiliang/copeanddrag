@@ -635,6 +635,61 @@ function addOrientationConstraint(selector, directions) {
 }
 
 
+function addCyclicConstraint(selector, direction) {
+
+    // If the structured editor is visible, add to the structured editor
+    if (isStructuredEditorVisible()) {
+
+        let constraintContainer = document.getElementById("constraintContainer");
+        let div = document.createElement("div");
+        div.classList.add("constraint");
+        div.innerHTML = CONSTRAINT_SELECT;
+        let sel = div.querySelector("select");
+        sel.value = "cyclic";
+        constraintContainer.prepend(div); // Add the new element to the top
+        // Now set the field selector to the selector
+        let paramsDiv = div.querySelector(".params");
+        paramsDiv.innerHTML = CYCLIC_SELECTOR;
+        let selectorInput = paramsDiv.querySelector("input[name='selector']");
+        selectorInput.value = selector;
+        let directionInput = paramsDiv.querySelector("select[name='direction']");
+        // Set the selected direction
+        if (direction) {
+            directionInput.value = direction; // Set the selected direction
+        } else {
+            directionInput.value = "clockwise"; // Default to clockwise if no direction is provided
+        }
+        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+        // Set the suggested input to true
+        suggestedInput.value = "true"; // Set to false, as this is not a suggested
+        // constraint
+        // And set the class of the DIV to 'suggestedConstraint'
+        div.classList.add("suggestedConstraint");
+    }
+    else if (isYamlEditorVisible()) {
+        // If the YAML editor is visible, add to the YAML editor
+        let yamlContent = window.editor.getValue();
+        let parsedYaml = jsyaml.load(yamlContent) || {};
+        parsedYaml.constraints = parsedYaml.constraints || [];
+        // Create the cyclic constraint object
+        let cyclicConstraint = {
+            cyclic: {
+                selector: selector,
+                direction: direction || "clockwise", // Default to clockwise if no direction is provided
+                suggested: true // Indicate this constraint was added programmatically
+            }
+        };
+        // Add the constraint to the constraints array
+        parsedYaml.constraints.push(cyclicConstraint);
+        // Convert back to YAML and set it in the editor
+        let yamlStr = jsyaml.dump(parsedYaml);
+        window.editor.setValue(yamlStr);
+    }
+    else {
+        alert("Please open the structured editor or YAML editor to add a cyclic constraint.");
+    }
+}
+
 function addGroupByFieldConstraint(field, groupOn, addToGroup) {
 
     // If the structured editor is visible, add to the structured editor
