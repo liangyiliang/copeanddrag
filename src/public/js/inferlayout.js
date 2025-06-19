@@ -379,5 +379,3 @@ const checkSingleRingOrLine = (graph) => {
   }
   return "none";
 };
-
-const getLongestChainForRelation = (relName) => {};
