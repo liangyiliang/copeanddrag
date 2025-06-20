@@ -1,11 +1,10 @@
 const TUPLE_SELECTOR_TEXT = `Forge expression yielding tuples (arity ≥ 2); constraint applies from first to last element.`;
 const UNARY_SELECTOR_TEXT = `Forge expression yielding singletons.`;
 
-const CYCLIC_DESCRIPTION = "Arrange elements along the perimeter of a circle."
-const ORIENTATION_DESCRIPTION = "Specify the relative positioning of elements."
-const GROUPING_SELECTOR_DESCRIPTION = "Group elements based on a selector."
-const GROUPING_FIELD_DESCRIPTION = "Group elements based on a field."
-
+const CYCLIC_DESCRIPTION = "Arrange elements along the perimeter of a circle.";
+const ORIENTATION_DESCRIPTION = "Specify the relative positioning of elements.";
+const GROUPING_SELECTOR_DESCRIPTION = "Group elements based on a selector.";
+const GROUPING_FIELD_DESCRIPTION = "Group elements based on a field.";
 
 const CONSTRAINT_SELECT = `
         <button class="close" title="Remove constraint" type="button" onclick="removeConstraint(this)">
@@ -44,8 +43,6 @@ const CYCLIC_SELECTOR = `
     <input type="hidden" name="suggested" value="false">
 
     `;
-
-
 
 const ORIENTATION_SELECTOR = `
 <div class="input-group">
@@ -91,8 +88,6 @@ const GROUP_BY_FIELD_SELECTOR = `
 
 `;
 
-
-
 const GROUP_BY_SELECTOR_SELECTOR = `
 
 <div class="input-group">
@@ -108,7 +103,6 @@ const GROUP_BY_SELECTOR_SELECTOR = `
     <input type="hidden" name="suggested" value="false">
 
 `;
-
 
 const DIRECTIVE_SELECT = `
     <button class="close" title="Remove directive" type="button" onclick="removeDirective(this)">
@@ -131,7 +125,6 @@ const DIRECTIVE_SELECT = `
     </div>
     <div class="params"></div>
 `;
-
 
 const ATTRIBUTE_SELECTOR = `
 <div class="input-group">
@@ -219,532 +212,509 @@ const HELPER_EDGE_SELECTOR = `
 </div>
 `;
 
-
-
-
 function addElement(containerId, className, template) {
-    const container = document.getElementById(containerId);
-    const div = document.createElement("div");
-    div.classList.add(className);
-    div.innerHTML = template;
+  const container = document.getElementById(containerId);
+  const div = document.createElement("div");
+  div.classList.add(className);
+  div.innerHTML = template;
 
-    container.prepend(div); // Add the new element to the top
-    updateFields(div.querySelector("select"));
+  container.prepend(div); // Add the new element to the top
+  updateFields(div.querySelector("select"));
 
-    // Add a highlight effect
-    div.classList.add("highlight");
-    setTimeout(() => {
-        div.classList.remove("highlight");
-    }, 1000); // Remove the highlight after 1 second
+  // Add a highlight effect
+  div.classList.add("highlight");
+  setTimeout(() => {
+    div.classList.remove("highlight");
+  }, 1000); // Remove the highlight after 1 second
 }
 
 function addConstraint() {
-    addElement("constraintContainer", "constraint", CONSTRAINT_SELECT);
+  addElement("constraintContainer", "constraint", CONSTRAINT_SELECT);
 }
 
 function addDirective() {
-    addElement("directiveContainer", "directive", DIRECTIVE_SELECT);
+  addElement("directiveContainer", "directive", DIRECTIVE_SELECT);
 }
 
 // TODO: This has to change
 function updateFields(select) {
-    const paramsDiv = select.parentElement.nextElementSibling;
-    paramsDiv.innerHTML = "";
-    const type = select.value;
+  const paramsDiv = select.parentElement.nextElementSibling;
+  paramsDiv.innerHTML = "";
+  const type = select.value;
 
+  // Constraint Fields
+  if (type === "cyclic") {
+    paramsDiv.innerHTML = CYCLIC_SELECTOR;
+  } else if (type === "orientation") {
+    paramsDiv.innerHTML = ORIENTATION_SELECTOR;
+  } else if (type === "groupfield") {
+    paramsDiv.innerHTML = GROUP_BY_FIELD_SELECTOR;
+  } else if (type === "groupselector") {
+    paramsDiv.innerHTML = GROUP_BY_SELECTOR_SELECTOR;
+  }
 
-    // Constraint Fields
-    if (type === "cyclic") {
-        paramsDiv.innerHTML = CYCLIC_SELECTOR;
-    } else if (type === "orientation") {
-        paramsDiv.innerHTML = ORIENTATION_SELECTOR;
-    } else if (type === "groupfield") {
-        paramsDiv.innerHTML = GROUP_BY_FIELD_SELECTOR;
-    } else if (type === "groupselector") {
-        paramsDiv.innerHTML = GROUP_BY_SELECTOR_SELECTOR;
-    }
-
-
-
-    // Directive Fields
-    if (type === "attribute") {
-        paramsDiv.innerHTML = ATTRIBUTE_SELECTOR;
-    }
-    else if (type === "hideField") {
-        paramsDiv.innerHTML = HIDE_FIELD_SELECTOR;
-    }
-    else if (type === "icon") {
-        paramsDiv.innerHTML = ICON_SELECTOR;
-    } else if (type === "color") {
-        paramsDiv.innerHTML = COLOR_SELECTOR;
-    }
-    else if (type === "size") {
-        paramsDiv.innerHTML = SIZE_SELECTOR;
-    }
-    else if (type === "projection") {
-        paramsDiv.innerHTML = PROJECTION_SELECTOR;
-    } else if (type === "flag") {
-        paramsDiv.innerHTML = FLAG_SELECTOR;
-    } else if (type === "inferredEdge") {
-        paramsDiv.innerHTML = HELPER_EDGE_SELECTOR;
-    }
+  // Directive Fields
+  if (type === "attribute") {
+    paramsDiv.innerHTML = ATTRIBUTE_SELECTOR;
+  } else if (type === "hideField") {
+    paramsDiv.innerHTML = HIDE_FIELD_SELECTOR;
+  } else if (type === "icon") {
+    paramsDiv.innerHTML = ICON_SELECTOR;
+  } else if (type === "color") {
+    paramsDiv.innerHTML = COLOR_SELECTOR;
+  } else if (type === "size") {
+    paramsDiv.innerHTML = SIZE_SELECTOR;
+  } else if (type === "projection") {
+    paramsDiv.innerHTML = PROJECTION_SELECTOR;
+  } else if (type === "flag") {
+    paramsDiv.innerHTML = FLAG_SELECTOR;
+  } else if (type === "inferredEdge") {
+    paramsDiv.innerHTML = HELPER_EDGE_SELECTOR;
+  }
 }
 
 function removeConstraint(button) {
-    button.parentElement.remove();
+  button.parentElement.remove();
 }
 
 function removeDirective(button) {
-    button.parentElement.remove();
+  button.parentElement.remove();
 }
 
-
-
 function toYamlConstraintType(t) {
-
-    if (t === "cyclic") {
-        return "cyclic";
-    }
-    if (t === "orientation") {
-        return "orientation";
-    }
-    if (t === "groupfield" || t === "groupselector") {
-        return "group";
-    }
-    return "unknown";
+  if (t === "cyclic") {
+    return "cyclic";
+  }
+  if (t === "orientation") {
+    return "orientation";
+  }
+  if (t === "groupfield" || t === "groupselector") {
+    return "group";
+  }
+  return "unknown";
 }
 
 function resolveColorValue(color) {
-    const resolvedColor = tinycolor(color); // Use TinyColor to parse the color
-    if (resolvedColor.isValid()) {
-        return resolvedColor.toHexString(); // Convert to hexadecimal format
-    }
-    console.warn(`Invalid color: ${color}. Defaulting to black.`);
-    return "#000000"; // Default to black if the color is invalid
+  const resolvedColor = tinycolor(color); // Use TinyColor to parse the color
+  if (resolvedColor.isValid()) {
+    return resolvedColor.toHexString(); // Convert to hexadecimal format
+  }
+  console.warn(`Invalid color: ${color}. Defaulting to black.`);
+  return "#000000"; // Default to black if the color is invalid
 }
 
 function writeToYAMLEditor() {
-    const constraints = [];
-    const directives = [];
+  const constraints = [];
+  const directives = [];
 
-    document.querySelectorAll(".constraint").forEach(div => {
-        const type = div.querySelector("select").value;
-        const params = {};
+  document.querySelectorAll(".constraint").forEach((div) => {
+    const type = div.querySelector("select").value;
+    const params = {};
 
-        div.querySelectorAll("input, select").forEach(input => {
-            if (input.multiple) {
-                params[input.name] = Array.from(input.selectedOptions).map(option => option.value);
-            } else if (input.name.length > 0) {
-                if (input.type === "number") {
-                    // Convert to number if the input type is number
-                    params[input.name] = parseFloat(input.value);
-                } else {
-                    params[input.name] = input.value;
-                }
-            }
-        });
-
-        constraints.push({ [toYamlConstraintType(type)]: params });
+    div.querySelectorAll("input, select").forEach((input) => {
+      if (input.multiple) {
+        params[input.name] = Array.from(input.selectedOptions).map(
+          (option) => option.value
+        );
+      } else if (input.name.length > 0) {
+        if (input.type === "number") {
+          // Convert to number if the input type is number
+          params[input.name] = parseFloat(input.value);
+        } else {
+          params[input.name] = input.value;
+        }
+      }
     });
 
-    document.querySelectorAll(".directive").forEach(div => {
-        const type = div.querySelector("select").value;
-        let params = {};
-        const isFlag = type === "flag";
+    constraints.push({ [toYamlConstraintType(type)]: params });
+  });
 
-        div.querySelectorAll("input, select").forEach(input => {
-            let key = input.name;
-            let value = input.value;
+  document.querySelectorAll(".directive").forEach((div) => {
+    const type = div.querySelector("select").value;
+    let params = {};
+    const isFlag = type === "flag";
 
-            if (key.length > 0) {
-                if (input.multiple) {
-                    params[key] = Array.from(input.selectedOptions).map(option => option.value);
-                } else if (isFlag) {
-                    // Handle flag directives
-                    params = value;
-                } else if (input.type === "number") {
-                    // Convert to number if the input type is number
-                    params[key] = parseFloat(value);
-                }
-                else if (input.type === "checkbox") {
-                    // Handle checkbox inputs
-                    params[key] = input.checked; // Add true or false based on the checkbox state
-                }
-                else {
-                    params[key] = value;
-                }
-            }
-        });
+    div.querySelectorAll("input, select").forEach((input) => {
+      let key = input.name;
+      let value = input.value;
 
-        directives.push({ [type]: params });
+      if (key.length > 0) {
+        if (input.multiple) {
+          params[key] = Array.from(input.selectedOptions).map(
+            (option) => option.value
+          );
+        } else if (isFlag) {
+          // Handle flag directives
+          params = value;
+        } else if (input.type === "number") {
+          // Convert to number if the input type is number
+          params[key] = parseFloat(value);
+        } else if (input.type === "checkbox") {
+          // Handle checkbox inputs
+          params[key] = input.checked; // Add true or false based on the checkbox state
+        } else {
+          params[key] = value;
+        }
+      }
     });
 
-    // Combine constraints and directives into a single YAML object
-    let combinedSpec = {};
-    if (constraints.length > 0) {
-        combinedSpec.constraints = constraints;
-    }
-    if (directives.length > 0) {
-        combinedSpec.directives = directives;
-    }
+    directives.push({ [type]: params });
+  });
 
-    let yamlStr = "";
+  // Combine constraints and directives into a single YAML object
+  let combinedSpec = {};
+  if (constraints.length > 0) {
+    combinedSpec.constraints = constraints;
+  }
+  if (directives.length > 0) {
+    combinedSpec.directives = directives;
+  }
 
-    if (Object.keys(combinedSpec).length > 0) {
-        yamlStr = jsyaml.dump(combinedSpec);
-    }
+  let yamlStr = "";
 
-    if (window.editor) {
-        window.editor.setValue(yamlStr);
-    } else {
-        alert("Window editor not found");
-    }
+  if (Object.keys(combinedSpec).length > 0) {
+    yamlStr = jsyaml.dump(combinedSpec);
+  }
+
+  if (window.editor) {
+    window.editor.setValue(yamlStr);
+  } else {
+    alert("Window editor not found");
+  }
 }
 
 function get_constraint_type_from_yaml(constraint) {
+  const type = Object.keys(constraint)[0]; // Get the constraint type
+  const params = constraint[type]; // Get the parameters for the constraint
 
-    const type = Object.keys(constraint)[0]; // Get the constraint type
-    const params = constraint[type]; // Get the parameters for the constraint
-
-    if (type === "cyclic" || type === "orientation") {
-        return type;
+  if (type === "cyclic" || type === "orientation") {
+    return type;
+  }
+  if (type === "group") {
+    if (params["selector"]) {
+      return "groupselector";
     }
-    if (type === "group") {
-        if (params["selector"]) {
-            return "groupselector";
-        }
-        if (params["field"]) {
-            return "groupfield";
-        }
+    if (params["field"]) {
+      return "groupfield";
     }
-    return "unknown";
+  }
+  return "unknown";
 }
-
-
 
 function populateStructuredEditor() {
+  if (!window.editor) {
+    alert("Something went wrong. Please refresh the page and try again.");
+    return;
+  }
 
-    if (!window.editor) {
-        alert("Something went wrong. Please refresh the page and try again.");
-        return;
+  try {
+    const yamlContent = window.editor.getValue();
+    const parsedYaml = jsyaml.load(yamlContent);
+
+    // Clear the existing constraints in the structured editor
+    const constraintContainer = document.getElementById("constraintContainer");
+    constraintContainer.innerHTML = "";
+
+    const directiveContainer = document.getElementById("directiveContainer");
+    directiveContainer.innerHTML = "";
+
+    const constraints = parsedYaml ? parsedYaml.constraints : [];
+    const directives = parsedYaml ? parsedYaml.directives : [];
+
+    // Populate the structured editor with constraints from the YAML
+    if (constraints) {
+      constraints.forEach((constraint) => {
+        const type = get_constraint_type_from_yaml(constraint);
+        const params = constraint[Object.keys(constraint)[0]];
+
+        // Add a new constraint to the structured editor
+        const div = document.createElement("div");
+        div.classList.add("constraint");
+        div.innerHTML = CONSTRAINT_SELECT;
+
+        let sel = div.querySelector("select");
+        sel.value = type;
+        constraintContainer.appendChild(div);
+
+        updateFields(sel); // Dynamically generate the fields
+        const paramsDiv = div.querySelector(".params");
+
+        // Fill in the values for the generated fields
+        Object.keys(params).forEach((key) => {
+          let input = paramsDiv.querySelector(`[name="${key}"]`);
+          if (input) {
+            if (input.multiple && Array.isArray(params[key])) {
+              // Handle multi-select fields
+              Array.from(input.options).forEach((option) => {
+                option.selected = params[key].includes(option.value);
+              });
+            } else {
+              // Handle single-value fields
+              input.value = params[key];
+            }
+
+            // If the input is the value 'suggested', set the class
+            // of the DIV to 'suggestedConstraint'
+            if (
+              (key === "suggested" && params[key] === true) ||
+              params[key] === "true"
+            ) {
+              div.classList.add("suggestedConstraint");
+            }
+          }
+        });
+      });
     }
 
-    try {
-        const yamlContent = window.editor.getValue();
-        const parsedYaml = jsyaml.load(yamlContent);
+    // Populate the structured editor with directives from the YAML
+    if (directives) {
+      directives.forEach((directive) => {
+        const type = Object.keys(directive)[0];
+        const params = directive[type];
 
-        // Clear the existing constraints in the structured editor
-        const constraintContainer = document.getElementById("constraintContainer");
-        constraintContainer.innerHTML = "";
+        // Add a new directive to the structured editor
+        const div = document.createElement("div");
+        div.classList.add("directive");
+        div.innerHTML = DIRECTIVE_SELECT;
 
-        const directiveContainer = document.getElementById("directiveContainer");
-        directiveContainer.innerHTML = "";
+        let sel = div.querySelector("select");
+        sel.value = type;
+        directiveContainer.appendChild(div);
 
+        updateFields(sel); // Dynamically generate the fields
+        const paramsDiv = div.querySelector(".params");
 
-        const constraints = parsedYaml ? parsedYaml.constraints : [];
-        const directives = parsedYaml ? parsedYaml.directives : [];
-
-
-        // Populate the structured editor with constraints from the YAML
-        if (constraints) {
-            constraints.forEach(constraint => {
-
-                const type = get_constraint_type_from_yaml(constraint);
-                const params = constraint[Object.keys(constraint)[0]];
-
-                // Add a new constraint to the structured editor
-                const div = document.createElement("div");
-                div.classList.add("constraint");
-                div.innerHTML = CONSTRAINT_SELECT;
-
-
-                let sel = div.querySelector("select");
-                sel.value = type;
-                constraintContainer.appendChild(div);
-
-                updateFields(sel); // Dynamically generate the fields
-                const paramsDiv = div.querySelector(".params");
-
-
-                // Fill in the values for the generated fields
-                Object.keys(params).forEach(key => {
-                    let input = paramsDiv.querySelector(`[name="${key}"]`);
-                    if (input) {
-                        if (input.multiple && Array.isArray(params[key])) {
-                            // Handle multi-select fields
-                            Array.from(input.options).forEach(option => {
-                                option.selected = params[key].includes(option.value);
-                            });
-                        } else {
-                            // Handle single-value fields
-                            input.value = params[key];
-                        }
-
-                        // If the input is the value 'suggested', set the class 
-                        // of the DIV to 'suggestedConstraint'
-                        if (key === "suggested" && params[key] === true || params[key] === "true") {
-                            div.classList.add("suggestedConstraint");
-                        }
-                    }
+        // Check if params is an object or a string
+        if (typeof params === "string") {
+          let singleInput = paramsDiv.querySelector(`[name="${type}"]`);
+          if (singleInput) {
+            singleInput.value = params;
+          }
+        } else if (typeof params === "object") {
+          // Fill in the values for the generated fields
+          Object.keys(params).forEach((key) => {
+            let input = paramsDiv.querySelector(`[name="${key}"]`);
+            if (input) {
+              if (input.type === "checkbox") {
+                // Handle checkbox fields
+                input.checked = params[key] === true; // Set checked if true
+              } else if (input.multiple && Array.isArray(params[key])) {
+                // Handle multi-select fields
+                Array.from(input.options).forEach((option) => {
+                  option.selected = params[key].includes(option.value);
                 });
-            });
+              } else if (input.type === "color") {
+                // Handle color fields
+                input.value = resolveColorValue(params[key]);
+              } else {
+                // Handle single-value fields
+                input.value = params[key];
+              }
+            }
+          });
         }
-
-
-        // Populate the structured editor with directives from the YAML
-        if (directives) {
-            directives.forEach(directive => {
-                const type = Object.keys(directive)[0];
-                const params = directive[type];
-
-                // Add a new directive to the structured editor
-                const div = document.createElement("div");
-                div.classList.add("directive");
-                div.innerHTML = DIRECTIVE_SELECT;
-
-                let sel = div.querySelector("select");
-                sel.value = type;
-                directiveContainer.appendChild(div);
-
-                updateFields(sel); // Dynamically generate the fields
-                const paramsDiv = div.querySelector(".params");
-
-                // Check if params is an object or a string
-                if (typeof params === "string") {
-                    let singleInput = paramsDiv.querySelector(`[name="${type}"]`);
-                    if (singleInput) {
-                        singleInput.value = params;
-                    }
-                } else if (typeof params === "object") {
-                    // Fill in the values for the generated fields
-                    Object.keys(params).forEach(key => {
-                        let input = paramsDiv.querySelector(`[name="${key}"]`);
-                        if (input) {
-                            if (input.type === "checkbox") {
-                                // Handle checkbox fields
-                                input.checked = params[key] === true; // Set checked if true
-                            } else if (input.multiple && Array.isArray(params[key])) {
-                                // Handle multi-select fields
-                                Array.from(input.options).forEach(option => {
-                                    option.selected = params[key].includes(option.value);
-                                });
-                            } else if (input.type === "color") {
-                                // Handle color fields
-                                input.value = resolveColorValue(params[key]);
-                            } else {
-                                // Handle single-value fields
-                                input.value = params[key];
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-    } catch (e) {
-        alert("Invalid YAML format: " + e.message);
+      });
     }
+  } catch (e) {
+    alert("Invalid YAML format: " + e.message);
+  }
 }
 
-
-
-
 function isStructuredEditorVisible() {
-    const structuredEditorControls = document.getElementById('structuredEditorControls');
-    return structuredEditorControls && structuredEditorControls.style.display === 'block';
+  const structuredEditorControls = document.getElementById(
+    "structuredEditorControls"
+  );
+  return (
+    structuredEditorControls &&
+    structuredEditorControls.style.display === "block"
+  );
 }
 
 function isYamlEditorVisible() {
-    const yamlEditorControls = document.getElementById('yamlEditorControls');
-    return yamlEditorControls && yamlEditorControls.style.display === 'block';
+  const yamlEditorControls = document.getElementById("yamlEditorControls");
+  return yamlEditorControls && yamlEditorControls.style.display === "block";
 }
-
 
 function addOrientationConstraint(selector, directions) {
+  if (
+    !selector ||
+    !directions ||
+    (Array.isArray(directions) && directions.length === 0)
+  ) {
+    console.error(
+      "Selector and directions not applied: ",
+      selector,
+      directions
+    );
+  }
 
+  // If the structured editor is visible, add to the structured editor
+  if (isStructuredEditorVisible()) {
+    let constraintContainer = document.getElementById("constraintContainer");
+    let div = document.createElement("div");
+    div.classList.add("constraint");
+    div.innerHTML = CONSTRAINT_SELECT;
+    let sel = div.querySelector("select");
+    sel.value = "orientation";
+    constraintContainer.prepend(div); // Add the new element to the top
+    // Now set the field selector to the selector
+    let paramsDiv = div.querySelector(".params");
+    paramsDiv.innerHTML = ORIENTATION_SELECTOR;
+    let selectorInput = paramsDiv.querySelector("input[name='selector']");
+    selectorInput.value = selector;
+    let directionsInput = paramsDiv.querySelector("select[name='directions']");
+    // Set the selected directions
+    if (Array.isArray(directions)) {
+      console.log("Setting multiple directions: ", directions);
 
-    if(!selector || !directions || (Array.isArray(directions) && directions.length === 0)) {
-        console.error("Selector and directions not applied: ", selector, directions);
+      directionsInput.value = directions; // Set the selected directions
+    } else {
+      directionsInput.value = [directions]; // Set the selected direction
     }
 
+    let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+    // Set the suggested input to true
+    suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
 
-    // If the structured editor is visible, add to the structured editor
-    if (isStructuredEditorVisible()) {
+    // And set the class of the DIV to 'suggestedConstraint'
+    div.classList.add("suggestedConstraint");
+  } else if (isYamlEditorVisible()) {
+    // If the YAML editor is visible, add to the YAML editor
+    let yamlContent = window.editor.getValue();
+    let parsedYaml = jsyaml.load(yamlContent) || {};
+    parsedYaml.constraints = parsedYaml.constraints || [];
 
-        let constraintContainer = document.getElementById("constraintContainer");
-        let div = document.createElement("div");
-        div.classList.add("constraint");
-        div.innerHTML = CONSTRAINT_SELECT;
-        let sel = div.querySelector("select");
-        sel.value = "orientation";
-        constraintContainer.prepend(div); // Add the new element to the top
-        // Now set the field selector to the selector
-        let paramsDiv = div.querySelector(".params");
-        paramsDiv.innerHTML = ORIENTATION_SELECTOR;
-        let selectorInput = paramsDiv.querySelector("input[name='selector']");
-        selectorInput.value = selector;
-        let directionsInput = paramsDiv.querySelector("select[name='directions']");
-        // Set the selected directions
-        if (Array.isArray(directions)) {
+    // Create the orientation constraint object
+    let orientationConstraint = {
+      orientation: {
+        selector: selector,
+        directions: Array.isArray(directions) ? directions : [directions],
+        suggested: true, // Indicate this constraint was added programmatically
+      },
+    };
 
-            console.log("Setting multiple directions: ", directions);
+    // Add the constraint to the constraints array
+    parsedYaml.constraints.push(orientationConstraint);
 
-            directionsInput.value = directions; // Set the selected directions
-        } else {
-            directionsInput.value = [directions]; // Set the selected direction
-        }
+    // I want seggested field to ideally have a comment above it saying
+    // "This constraint was added programmatically. You can edit it in the structured editor."
 
-
-        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
-        // Set the suggested input to true
-        suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
-
-        // And set the class of the DIV to 'suggestedConstraint'
-        div.classList.add("suggestedConstraint");
-
-    }
-    else if (isYamlEditorVisible()) {
-        // If the YAML editor is visible, add to the YAML editor
-        let yamlContent = window.editor.getValue();
-        let parsedYaml = jsyaml.load(yamlContent) || {};
-        parsedYaml.constraints = parsedYaml.constraints || [];
-
-        // Create the orientation constraint object
-        let orientationConstraint = {
-            orientation: {
-                selector: selector,
-                directions: Array.isArray(directions) ? directions : [directions],
-                suggested: true // Indicate this constraint was added programmatically
-            }
-        };
-
-        // Add the constraint to the constraints array
-        parsedYaml.constraints.push(orientationConstraint);
-
-
-        // I want seggested field to ideally have a comment above it saying
-        // "This constraint was added programmatically. You can edit it in the structured editor."
-
-        // Convert back to YAML and set it in the editor
-        let yamlStr = jsyaml.dump(parsedYaml);
-        window.editor.setValue(yamlStr);
-    }
-    else {
-        alert("Please open the structured editor or YAML editor to add an orientation constraint.");
-    }
+    // Convert back to YAML and set it in the editor
+    let yamlStr = jsyaml.dump(parsedYaml);
+    window.editor.setValue(yamlStr);
+  } else {
+    alert(
+      "Please open the structured editor or YAML editor to add an orientation constraint."
+    );
+  }
 }
 
-
 function addCyclicConstraint(selector, direction) {
-
-    // If the structured editor is visible, add to the structured editor
-    if (isStructuredEditorVisible()) {
-
-        let constraintContainer = document.getElementById("constraintContainer");
-        let div = document.createElement("div");
-        div.classList.add("constraint");
-        div.innerHTML = CONSTRAINT_SELECT;
-        let sel = div.querySelector("select");
-        sel.value = "cyclic";
-        constraintContainer.prepend(div); // Add the new element to the top
-        // Now set the field selector to the selector
-        let paramsDiv = div.querySelector(".params");
-        paramsDiv.innerHTML = CYCLIC_SELECTOR;
-        let selectorInput = paramsDiv.querySelector("input[name='selector']");
-        selectorInput.value = selector;
-        let directionInput = paramsDiv.querySelector("select[name='direction']");
-        // Set the selected direction
-        if (direction) {
-            directionInput.value = direction; // Set the selected direction
-        } else {
-            directionInput.value = "clockwise"; // Default to clockwise if no direction is provided
-        }
-        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
-        // Set the suggested input to true
-        suggestedInput.value = "true"; // Set to false, as this is not a suggested
-        // constraint
-        // And set the class of the DIV to 'suggestedConstraint'
-        div.classList.add("suggestedConstraint");
+  // If the structured editor is visible, add to the structured editor
+  if (isStructuredEditorVisible()) {
+    let constraintContainer = document.getElementById("constraintContainer");
+    let div = document.createElement("div");
+    div.classList.add("constraint");
+    div.innerHTML = CONSTRAINT_SELECT;
+    let sel = div.querySelector("select");
+    sel.value = "cyclic";
+    constraintContainer.prepend(div); // Add the new element to the top
+    // Now set the field selector to the selector
+    let paramsDiv = div.querySelector(".params");
+    paramsDiv.innerHTML = CYCLIC_SELECTOR;
+    let selectorInput = paramsDiv.querySelector("input[name='selector']");
+    selectorInput.value = selector;
+    let directionInput = paramsDiv.querySelector("select[name='direction']");
+    // Set the selected direction
+    if (direction) {
+      directionInput.value = direction; // Set the selected direction
+    } else {
+      directionInput.value = "clockwise"; // Default to clockwise if no direction is provided
     }
-    else if (isYamlEditorVisible()) {
-        // If the YAML editor is visible, add to the YAML editor
-        let yamlContent = window.editor.getValue();
-        let parsedYaml = jsyaml.load(yamlContent) || {};
-        parsedYaml.constraints = parsedYaml.constraints || [];
-        // Create the cyclic constraint object
-        let cyclicConstraint = {
-            cyclic: {
-                selector: selector,
-                direction: direction || "clockwise", // Default to clockwise if no direction is provided
-                suggested: true // Indicate this constraint was added programmatically
-            }
-        };
-        // Add the constraint to the constraints array
-        parsedYaml.constraints.push(cyclicConstraint);
-        // Convert back to YAML and set it in the editor
-        let yamlStr = jsyaml.dump(parsedYaml);
-        window.editor.setValue(yamlStr);
-    }
-    else {
-        alert("Please open the structured editor or YAML editor to add a cyclic constraint.");
-    }
+    let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+    // Set the suggested input to true
+    suggestedInput.value = "true"; // Set to false, as this is not a suggested
+    // constraint
+    // And set the class of the DIV to 'suggestedConstraint'
+    div.classList.add("suggestedConstraint");
+  } else if (isYamlEditorVisible()) {
+    // If the YAML editor is visible, add to the YAML editor
+    let yamlContent = window.editor.getValue();
+    let parsedYaml = jsyaml.load(yamlContent) || {};
+    parsedYaml.constraints = parsedYaml.constraints || [];
+    // Create the cyclic constraint object
+    let cyclicConstraint = {
+      cyclic: {
+        selector: selector,
+        direction: direction || "clockwise", // Default to clockwise if no direction is provided
+        suggested: true, // Indicate this constraint was added programmatically
+      },
+    };
+    // Add the constraint to the constraints array
+    parsedYaml.constraints.push(cyclicConstraint);
+    // Convert back to YAML and set it in the editor
+    let yamlStr = jsyaml.dump(parsedYaml);
+    window.editor.setValue(yamlStr);
+  } else {
+    alert(
+      "Please open the structured editor or YAML editor to add a cyclic constraint."
+    );
+  }
 }
 
 function addGroupByFieldConstraint(field, groupOn, addToGroup) {
+  // If the structured editor is visible, add to the structured editor
+  if (isStructuredEditorVisible()) {
+    let constraintContainer = document.getElementById("constraintContainer");
+    let div = document.createElement("div");
+    div.classList.add("constraint");
+    div.innerHTML = CONSTRAINT_SELECT;
+    let sel = div.querySelector("select");
+    sel.value = "groupfield";
+    constraintContainer.prepend(div); // Add the new element to the top
+    // Now set the field selector to the selector
+    let paramsDiv = div.querySelector(".params");
+    paramsDiv.innerHTML = GROUP_BY_FIELD_SELECTOR;
+    let fieldInput = paramsDiv.querySelector("input[name='field']");
+    fieldInput.value = field;
+    let groupOnInput = paramsDiv.querySelector("input[name='groupOn']");
+    groupOnInput.value = groupOn;
+    let addToGroupInput = paramsDiv.querySelector("input[name='addToGroup']");
+    addToGroupInput.value = addToGroup;
 
-    // If the structured editor is visible, add to the structured editor
-    if (isStructuredEditorVisible()) {
+    let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
+    // Set the suggested input to true
+    suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
 
-        let constraintContainer = document.getElementById("constraintContainer");
-        let div = document.createElement("div");
-        div.classList.add("constraint");
-        div.innerHTML = CONSTRAINT_SELECT;
-        let sel = div.querySelector("select");
-        sel.value = "groupfield";
-        constraintContainer.prepend(div); // Add the new element to the top
-        // Now set the field selector to the selector
-        let paramsDiv = div.querySelector(".params");
-        paramsDiv.innerHTML = GROUP_BY_FIELD_SELECTOR;
-        let fieldInput = paramsDiv.querySelector("input[name='field']");
-        fieldInput.value = field;
-        let groupOnInput = paramsDiv.querySelector("input[name='groupOn']");
-        groupOnInput.value = groupOn;
-        let addToGroupInput = paramsDiv.querySelector("input[name='addToGroup']");
-        addToGroupInput.value = addToGroup;
+    // And set the class of the DIV to 'suggestedConstraint'
+    div.classList.add("suggestedConstraint");
+  }
 
-        let suggestedInput = paramsDiv.querySelector("input[name='suggested']");
-        // Set the suggested input to true
-        suggestedInput.value = "true"; // Set to false, as this is not a suggested constraint
+  if (isYamlEditorVisible()) {
+    // If the YAML editor is visible, add to the YAML editor
+    let yamlContent = window.editor.getValue();
+    let parsedYaml = jsyaml.load(yamlContent) || {};
+    parsedYaml.constraints = parsedYaml.constraints || [];
 
-        // And set the class of the DIV to 'suggestedConstraint'
-        div.classList.add("suggestedConstraint");
+    // Create the group by field constraint object
+    let groupFieldConstraint = {
+      group: {
+        field: field,
+        groupOn: parseInt(groupOn, 10),
+        addToGroup: parseInt(addToGroup, 10),
+        suggestedInput: true, // Indicate this constraint was added programmatically
+      },
+    };
 
-    }
-    
-    if(isYamlEditorVisible()) {
-        // If the YAML editor is visible, add to the YAML editor
-        let yamlContent = window.editor.getValue();
-        let parsedYaml = jsyaml.load(yamlContent) || {};
-        parsedYaml.constraints = parsedYaml.constraints || [];
+    // Add the constraint to the constraints array
+    parsedYaml.constraints.push(groupFieldConstraint);
 
-        // Create the group by field constraint object
-        let groupFieldConstraint = {
-            group: {
-                field: field,
-                groupOn: parseInt(groupOn, 10),
-                addToGroup: parseInt(addToGroup, 10),
-                suggestedInput: true // Indicate this constraint was added programmatically
-            }
-        };
-
-        // Add the constraint to the constraints array
-        parsedYaml.constraints.push(groupFieldConstraint);
-
-        // Convert back to YAML and set it in the editor
-        let yamlStr = jsyaml.dump(parsedYaml);
-        window.editor.setValue(yamlStr);
-    }
-    else {
-        alert("Please open the structured editor or YAML editor to add a group by field constraint.");
-    }
+    // Convert back to YAML and set it in the editor
+    let yamlStr = jsyaml.dump(parsedYaml);
+    window.editor.setValue(yamlStr);
+  } else {
+    alert(
+      "Please open the structured editor or YAML editor to add a group by field constraint."
+    );
+  }
 }

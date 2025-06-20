@@ -3,88 +3,134 @@ const alg = graphlib.alg;
 
 const inferLayout = () => {
   const relationConstraintTable = createRelationConcreteConstraintsTable();
+
   const abstractConstraintsFromRelations =
     generateAbstractConstraintsFromRelations(relationConstraintTable);
 
-  // Group constraints by relName
-  for (const { relName, constraints } of abstractConstraintsFromRelations) {
-    addOrientationConstraint(relName, constraints);
-  }
+  filterAndAddOrientationConstraints(abstractConstraintsFromRelations, 0.8);
 
   const sigConstraintTable = createSigConcreteConstraintsTable();
+
   const abstractConstraintsFromSigs =
     generateAbstractConstraintsFromRelations(sigConstraintTable);
-  abstractConstraintsFromSigs.map(({ relName, constraints }) => {
-    const [t0, t1] = relName.split("-");
-    addOrientationConstraint(`${t0} -> ${t1}`, constraints);
-  });
+
+  filterAndAddOrientationConstraints(abstractConstraintsFromSigs, 0.8);
 
   addCycleConstraints();
 };
 
-const shapeConstraintEnergyFn = {
+const filterAndAddOrientationConstraints = (abstractConstraints, cutoff) => {
+  for (const { relName, constraints } of abstractConstraints) {
+    console.log(`Adding constraints for relation: ${relName}`);
+    for (const [constraint, confidence] of Object.entries(constraints)) {
+      console.log(
+        "  CONSTRAINT  " + constraint + "  CONFIDENCE  " + confidence
+      );
+    }
+    const filteredConstraints = Object.entries(constraints)
+      .filter(([constraint, confidence]) => confidence >= cutoff)
+      .map(([constraint]) => constraint);
+    addOrientationConstraint(relName, filteredConstraints);
+  }
+};
+
+const sigmoid = (x) => {
+  return 1 / (1 + Math.exp(-x));
+};
+
+// inflection point at OFFSET
+// SCALE is the steepness of the curve -- larger = steeper
+// FLIP is a boolean that flips the curve around the x-axis
+const modifiedSigmoid = (x, offset, scale, flip) => {
+  let intermediate = scale * (x - offset);
+  if (flip === true) intermediate = -intermediate;
+  return sigmoid(intermediate);
+};
+
+const fixCoordinates = (pos) => {
+  const { x, y, w, h } = pos;
+  return { x: x + w / 2, y: -(y + h / 2), w, h };
+};
+
+const shapeConstraintConfidenceFn = {
   left: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = x0 - (x1 - w1 / 4);
-    return diff < 0 ? 0 : diff + 10;
+    // 0 is to the left of 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = x0 - x1;
+    // diff < 0 => x0 - x1 < 0 => x0 < x1 => good
+    return modifiedSigmoid(diff, -50, 0.1, true);
   },
   right: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = x0 - (x1 + w1 / 4);
-    return diff > 0 ? 0 : -diff + 10;
+    // 0 is to the right of 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = x0 - x1;
+    // diff > 0 => x0 - x1 > 0 => x0 > x1 => good
+    return modifiedSigmoid(diff, 50, 0.1, false);
   },
   above: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = y0 - (y1 - h1 / 4);
-    return diff > 0 ? diff + 10 : 0;
+    // 0 is above 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = y0 - y1;
+    // diff > 0 => y0 - y1 > 0 => y0 > y1 => good
+    return modifiedSigmoid(diff, 25, 0.1, false);
   },
   below: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = y0 - (y1 + h1 / 4);
-    return diff < 0 ? -diff + 10 : 0;
+    // 0 is below 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = y0 - y1;
+    // diff < 0 => y0 - y1 < 0 => y0 < y1 => good
+    return modifiedSigmoid(diff, -25, 0.1, true);
   },
-  directlyLeft: (pos0, pos1) => {
+  exactlyLeft: (pos0, pos1) => {
     return (
-      shapeConstraintEnergyFn.left(pos0, pos1) +
-      alignmentEnergyFn.horizontallyAligned(pos0, pos1)
+      shapeConstraintConfidenceFn.left(pos0, pos1) *
+      shapeAlignmentConfidenceFn.horizontallyAligned(pos0, pos1)
     );
   },
-  directlyRight: (pos0, pos1) => {
+  exactlyRight: (pos0, pos1) => {
     return (
-      shapeConstraintEnergyFn.right(pos0, pos1) +
-      alignmentEnergyFn.horizontallyAligned(pos0, pos1)
+      shapeConstraintConfidenceFn.right(pos0, pos1) *
+      shapeAlignmentConfidenceFn.horizontallyAligned(pos0, pos1)
     );
   },
-  directlyAbove: (pos0, pos1) => {
+  exactlyAbove: (pos0, pos1) => {
     return (
-      shapeConstraintEnergyFn.above(pos0, pos1) +
-      alignmentEnergyFn.verticallyAligned(pos0, pos1)
+      shapeConstraintConfidenceFn.above(pos0, pos1) *
+      shapeAlignmentConfidenceFn.verticallyAligned(pos0, pos1)
     );
   },
-  directlyBelow: (pos0, pos1) => {
+  exactlyBelow: (pos0, pos1) => {
     return (
-      shapeConstraintEnergyFn.below(pos0, pos1) +
-      alignmentEnergyFn.verticallyAligned(pos0, pos1)
+      shapeConstraintConfidenceFn.below(pos0, pos1) *
+      shapeAlignmentConfidenceFn.verticallyAligned(pos0, pos1)
     );
   },
 };
 
-const alignmentEnergyFn = {
+const unnormalizedGaussian = (x, mean, variance) => {
+  return Math.exp((-(x - mean) * (x - mean)) / (2 * variance));
+};
+
+const shapeAlignmentConfidenceFn = {
   horizontallyAligned: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = Math.abs(y0 - y1) - (h0 + h1) / 2 / 4;
-    return diff < 0 ? 0 : diff;
+    // 0 is horizontally aligned with 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = y0 - y1;
+    // diff = 0 => good
+    return unnormalizedGaussian(diff, 0, 1600);
   },
   verticallyAligned: (pos0, pos1) => {
-    const { x: x0, y: y0, w: w0, h: h0 } = pos0;
-    const { x: x1, y: y1, w: w1, h: h1 } = pos1;
-    const diff = Math.abs(x0 - x1) - (w0 + w1) / 2 / 4;
-    return diff < 0 ? 0 : diff;
+    // 0 is vertically aligned with 1
+    const { x: x0, y: y0 } = pos0;
+    const { x: x1, y: y1 } = pos1;
+    const diff = x0 - x1;
+    // diff = 0 => good
+    return unnormalizedGaussian(diff, 0, 1600);
   },
 };
 
@@ -97,6 +143,8 @@ const createRelationConcreteConstraintsTable = () => {
     const { source, target, relName, id: edgeId } = edge;
     const sourceName = source.id;
     const targetName = target.id;
+    // pos0 rel pos1
+    // target rel source
     const pos1 = {
       x: source.x,
       y: source.y,
@@ -109,23 +157,22 @@ const createRelationConcreteConstraintsTable = () => {
       w: target.width,
       h: target.height,
     };
+    const fixedPos0 = fixCoordinates(pos0); // target
+    const fixedPos1 = fixCoordinates(pos1); // source
 
-    const shapeConstraintEnergyValues = {};
-    for (const [constrName, energyFn] of Object.entries(
-      shapeConstraintEnergyFn
-    )) {
-      const energy = energyFn(pos0, pos1);
-      shapeConstraintEnergyValues[constrName] = energy;
-    }
+    const confScores = Object.fromEntries(
+      Object.entries(shapeConstraintConfidenceFn).map(
+        ([constraint, confFn]) => [constraint, confFn(fixedPos0, fixedPos1)]
+      )
+    );
 
-    const record = {
+    relationConstraintTable.push({
+      edgeId,
       relName,
       sourceName,
       targetName,
-      edgeId,
-      shapeConstraintEnergyValues,
-    };
-    relationConstraintTable.push(record);
+      confScores,
+    });
   }
   return relationConstraintTable;
 };
@@ -133,32 +180,35 @@ const createRelationConcreteConstraintsTable = () => {
 const generateAbstractConstraintsFromRelations = (table) => {
   const relationEdgeMap = new Map();
   for (const record of table) {
-    const { relName, sourceName, targetName, shapeConstraintEnergyValues } =
-      record;
+    const { relName, sourceName, targetName, confScores } = record;
     if (!relationEdgeMap.has(relName)) {
       relationEdgeMap.set(relName, []);
     }
     relationEdgeMap.get(relName).push({
       sourceName: sourceName,
       targetName: targetName,
-      shapeConstraintEnergyValues,
+      confScores,
     });
   }
 
   const abstractConstraints = [];
   for (const [relName, edges] of relationEdgeMap.entries()) {
-    const appropriateConstraints = Object.keys(shapeConstraintEnergyFn).filter(
-      (c) =>
-        edges
-          .map((edge) => edge.shapeConstraintEnergyValues[c])
-          .every((v) => v < 0.5)
+    const compoundConfidences = Object.fromEntries(
+      Object.keys(shapeConstraintConfidenceFn).map((constraint) => {
+        const confs = edges.map((edge) => edge.confScores[constraint]);
+        // geometric mean of the confidences
+        const logConfs = confs.map((c) => Math.log(c));
+        const sumLogConfs = logConfs.reduce((a, b) => a + b, 0);
+        const meanLogConfs = sumLogConfs / confs.length;
+        const compoundConfidence = Math.exp(meanLogConfs);
+        return [constraint, compoundConfidence];
+      })
     );
-    if (appropriateConstraints.length !== 0) {
-      abstractConstraints.push({
-        relName,
-        constraints: appropriateConstraints,
-      });
-    }
+
+    abstractConstraints.push({
+      relName,
+      constraints: compoundConfidences,
+    });
   }
 
   return abstractConstraints;
@@ -195,7 +245,7 @@ const createSigConcreteConstraintsTable = () => {
         }
 
         sigConstraintTable.push({
-          relName: `${t0}-${t1}`,
+          relName: `${t0} -> ${t1}`,
           typeSource: t0,
           typeTarget: t1,
           sourceName: n0.id,
