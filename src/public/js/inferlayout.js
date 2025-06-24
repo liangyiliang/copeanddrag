@@ -85,25 +85,25 @@ const shapeConstraintConfidenceFn = {
     // diff < 0 => y0 - y1 < 0 => y0 < y1 => good
     return modifiedSigmoid(diff, -25, 0.1, true);
   },
-  exactlyLeft: (pos0, pos1) => {
+  directlyLeft: (pos0, pos1) => {
     return (
       shapeConstraintConfidenceFn.left(pos0, pos1) *
       shapeAlignmentConfidenceFn.horizontallyAligned(pos0, pos1)
     );
   },
-  exactlyRight: (pos0, pos1) => {
+  directlyRight: (pos0, pos1) => {
     return (
       shapeConstraintConfidenceFn.right(pos0, pos1) *
       shapeAlignmentConfidenceFn.horizontallyAligned(pos0, pos1)
     );
   },
-  exactlyAbove: (pos0, pos1) => {
+  directlyAbove: (pos0, pos1) => {
     return (
       shapeConstraintConfidenceFn.above(pos0, pos1) *
       shapeAlignmentConfidenceFn.verticallyAligned(pos0, pos1)
     );
   },
-  exactlyBelow: (pos0, pos1) => {
+  directlyBelow: (pos0, pos1) => {
     return (
       shapeConstraintConfidenceFn.below(pos0, pos1) *
       shapeAlignmentConfidenceFn.verticallyAligned(pos0, pos1)
